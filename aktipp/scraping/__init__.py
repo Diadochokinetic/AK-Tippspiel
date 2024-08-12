@@ -1,6 +1,6 @@
-from .scrape_openligadb import load_season_openligadb, load_many_seasons_openligadb
+from .scrape_openligadb import scrape_season_openligadb, scrape_many_seasons_openligadb
 
 __all__ = [
-    "load_season_openligadb",
-    "load_many_seasons_openligadb",
+    "scrape_season_openligadb",
+    "scrape_many_seasons_openligadb",
 ]

@@ -35,7 +35,7 @@ def _check_season_openligadb_exists(league: str, season: int) -> bool:
     return (league, season) in league_season_list
 
 
-def load_season_openligadb(league: str, season: int, data_path: str) -> None:
+def scrape_season_openligadb(league: str, season: int, data_path: str) -> None:
     """Load all games from one season of a league from openligadb and dump it as json.
     The dumped file will named 'league_season.json'.
 
@@ -61,7 +61,7 @@ def load_season_openligadb(league: str, season: int, data_path: str) -> None:
         json.dump(data, file)
 
 
-def load_many_seasons_openligadb(
+def scrape_many_seasons_openligadb(
     leagues: list[str], seasons: list[int], data_path: str
 ) -> None:
     """Load all games from many seasons of many leagues from openligadb. Dump the
@@ -82,7 +82,7 @@ def load_many_seasons_openligadb(
     for league in leagues:
         for season in seasons:
             if _check_season_openligadb_exists(league, season):
-                load_season_openligadb(league, season, data_path)
+                scrape_season_openligadb(league, season, data_path)
                 print(f"{league} {season} has been loaded.")
             else:
                 print(f"{league} {season} is not available and will be skipped.")
