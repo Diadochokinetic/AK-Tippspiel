@@ -1,8 +1,30 @@
 import json
+import os
 import polars as pl
 
 
-def normalize_openligadb_season(
+def _check_season_openligadb_exists(league: str, season: str, data_path: str) -> bool:
+    """Check if a league season combination as available as json.
+
+    Parameters
+    ----------
+    league : str
+        String identifier from the league, e.g. 'bl1' for 1. Bundesliga. A complete
+        list can be retrieved from https://api.openligadb.de/getavailableleagues.
+    season : int
+        Year indicating the start of a season, e.g. 2023 for the 2023/2024 season.
+    data_path : str
+        Path where the data should be available as json.
+
+    Returns
+    -------
+    result : bool
+        True if league season combination is available.
+    """
+    return os.path.isfile(data_path + f"{league}_{season}.json")
+
+
+def normalize_season_openligadb(
     league: str,
     season: str,
     data_path: str,
@@ -114,8 +136,48 @@ def normalize_openligadb_season(
     }
     df = pl.json_normalize(data=data, schema=schema)
 
-    record_keys = list(df[records].explode().dtype.to_schema().keys())
+    if isinstance(df[records].explode().dtype, pl.Null):
+        print(f"{league} {season} has no {records}. Only meta data.")
+        df.select(meta).write_parquet(
+            data_path + f"{league}_{season}_{records}.parquet"
+        )
+    else:
+        record_keys = list(df[records].explode().dtype.to_schema().keys())
+        df.explode(records).unnest(records).select(meta + record_keys).write_parquet(
+            data_path + f"{league}_{season}_{records}.parquet"
+        )
 
-    df.explode(records).unnest(records).select(meta + record_keys).write_parquet(
-        data_path + f"{league}_{season}_{records}.parquet"
-    )
+
+def normalize_many_seasons_openligadb(
+    leagues: list[str],
+    seasons: list[int],
+    data_path: str,
+    records: str = "matchResults",
+    meta: str | list[str] = "all",
+) -> None:
+    """Normalize many seasons from json into a relational table and dump them as
+    parquet.
+
+    Parameters
+    ----------
+    leagues: list[str]
+        List of string identifiers, e.g. ['bl1', 'bl2']. A complete list of possible
+        values can be retrieved from https://api.openligadb.de/getavailableleagues.
+    seasons: list[int]
+        List of years for multiple seasons.
+    data_path : str
+        Path where the data should be read from json and dumped as normalized parquet.
+    records : str, default="matchResults"
+        List of the records to be normalized.
+    meta : str | list[str], default="all"
+        Meta data to be used in normalization. "all" indicates all available meta data.
+        Otherwise a list, e.g. ["matchID"] with desired meta data can be passed.
+    """
+
+    for league in leagues:
+        for season in seasons:
+            if _check_season_openligadb_exists(league, season, data_path):
+                normalize_season_openligadb(league, season, data_path, records, meta)
+                print(f"{league} {season} has been normalized.")
+            else:
+                print(f"{league} {season} is not available and will be skipped.")
