@@ -165,11 +165,11 @@ def normalize_season_openligadb(
     if isinstance(df[records].explode().dtype, pl.Null):
         print(f"{league} {season} has no {records}. Only meta data.")
 
-    df.explode(records).cast({records: pl.Struct(schema_records[records])}).unnest(
-        records
-    ).select(meta + record_keys).write_parquet(
-        data_path + f"{league}_{season}_{records}.parquet"
-    )
+    df.explode(records)  \
+        .cast({records: pl.Struct(schema_records[records])}) \
+        .unnest(records) \
+        .select(meta + record_keys) \
+        .write_parquet(data_path + f"{league}_{season}_{records}.parquet")  # fmt: skip
 
 
 def normalize_many_seasons_openligadb(
