@@ -105,7 +105,7 @@ def normalize_season_openligadb(
         data = json.load(file)
 
     # normalize data and dump as parquet file
-    schema = {
+    schema_input = {
         "matchID": pl.Int64,
         "matchDateTime": pl.String,
         "timeZoneID": pl.String,
@@ -134,18 +134,42 @@ def normalize_season_openligadb(
         "matchResults": pl.List,
         "goals": pl.Unknown,
     }
-    df = pl.json_normalize(data=data, schema=schema)
+    schema_records = {
+        "matchResults": {
+            "resultID": pl.Int64,
+            "resultName": pl.String,
+            "pointsTeam1": pl.Int64,
+            "pointsTeam2": pl.Int64,
+            "resultOrderID": pl.Int64,
+            "resultTypeID": pl.Int64,
+            "resultDescription": pl.String,
+        },
+        "goals": {
+            "goalID": pl.Int64,
+            "scoreTeam1": pl.Int64,
+            "scoreTeam2": pl.Int64,
+            "matchMinute": pl.Int64,
+            "goalGetterID": pl.Int64,
+            "goalGetterName": pl.String,
+            "isPenalty": pl.Boolean,
+            "isOwnFoal": pl.Boolean,
+            "isOvertime": pl.Boolean,
+            "comment": pl.String,
+        },
+    }
+    record_keys = list(schema_records[records].keys())
 
+    df = pl.json_normalize(data=data, schema=schema_input)
+
+    # Info message, if there are no results
     if isinstance(df[records].explode().dtype, pl.Null):
         print(f"{league} {season} has no {records}. Only meta data.")
-        df.select(meta).write_parquet(
-            data_path + f"{league}_{season}_{records}.parquet"
-        )
-    else:
-        record_keys = list(df[records].explode().dtype.to_schema().keys())
-        df.explode(records).unnest(records).select(meta + record_keys).write_parquet(
-            data_path + f"{league}_{season}_{records}.parquet"
-        )
+
+    df.explode(records).cast({records: pl.Struct(schema_records[records])}).unnest(
+        records
+    ).select(meta + record_keys).write_parquet(
+        data_path + f"{league}_{season}_{records}.parquet"
+    )
 
 
 def normalize_many_seasons_openligadb(
