@@ -29,13 +29,21 @@ def _build_features(features: list[str]) -> list[pl.Expr]:
 
 
 DEFAULT_FEATURES = [
-    "goalsTeam1",
-    "goalsTeam2",
-    "goalsDiff",
-    "pointsTeam1",
-    "pointsTeam2",
-    "resultClass",
-    "seasonName",
+    "match_id",
+    "league_id",
+    "league_name",
+    "season_name",
+    "match_day",
+    "team_id_1",
+    "team_id_2",
+    "team_name_1",
+    "team_name_2",
+    "goals_team_1",
+    "goals_team_2",
+    "goals_diff",
+    "result_class",
+    "points_team_1",
+    "points_team_2",
 ]
 
 
@@ -68,22 +76,23 @@ def clean_openligadb(
     team_mapper_path = resources.files(mapper) / "team_mapper.csv"
     team_mapper = pl.scan_csv(team_mapper_path)
 
-    records_data.filter(pl.col("resultName") == "Endergebnis").with_columns(
-        feature_store._league_name_raw()
-    ).join(other=league_mapper, on="league_name_raw", how="left").join(
-        other=team_mapper.select(["teamName", "teamIDUnique"]).rename(
-            {"teamIDUnique": "teamID1"}
+    records_data.with_columns(feature_store._league_name_raw()) \
+    .join(other=league_mapper, on="league_name_raw", how="left") \
+    .join(
+        other=team_mapper.select(["team_name", "team_id_unique"]).rename(
+            {"team_id_unique": "team_id_unique_1"}
         ),
         left_on="team1.teamName",
-        right_on="teamName",
+        right_on="team_name",
         how="left",
-    ).join(
-        other=team_mapper.select(["teamName", "teamIDUnique"]).rename(
-            {"teamIDUnique": "teamID2"}
+    ) \
+    .join(
+        other=team_mapper.select(["team_name", "team_id_unique"]).rename(
+            {"team_id_unique": "team_id_unique_2"}
         ),
         left_on="team2.teamName",
-        right_on="teamName",
+        right_on="team_name",
         how="left",
-    ).select(
-        pl.col("matchID"),
-    ).sink_parquet(data_path + f"{records}_clean.parquet")  # fmt: ignore
+    ) \
+    .select(*_build_features(features)) \
+    .sink_parquet(data_path + f"{records}_clean.parquet")  # fmt: skip
