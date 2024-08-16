@@ -2,15 +2,17 @@ import polars as pl
 
 
 def _goals_team_1():
-    return pl.col("pointsTeam1").alias("goals_team_1")
+    return pl.coalesce(pl.col("pointsTeam1"), 0).alias("goals_team_1")
 
 
 def _goals_team_2():
-    return pl.col("pointsTeam2").alias("goals_team_2")
+    return pl.coalesce(pl.col("pointsTeam2"), 0).alias("goals_team_2")
 
 
 def _goals_diff():
-    return (pl.col("pointsTeam1") - pl.col("pointsTeam2")).alias("goals_diff")
+    return pl.coalesce(pl.col("pointsTeam1") - pl.col("pointsTeam2"), 0).alias(
+        "goals_diff"
+    )
 
 
 def _league_id():
@@ -27,6 +29,10 @@ def _league_name_raw():
 
 def _match_day():
     return pl.col("group.groupOrderID").alias("match_day")
+
+
+def _match_day_name():
+    return pl.col("group.groupName").alias("match_day_name")
 
 
 def _match_id():
@@ -70,6 +76,10 @@ def _result_class():
         .otherwise(None)
         .alias("result_class")  # fmt: skip
     )
+
+
+def _result_name():
+    return pl.col("resultName").alias("result_name")
 
 
 def _season_name():
