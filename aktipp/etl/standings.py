@@ -140,14 +140,14 @@ def _create_team_based_views(
                     pl.col("match_day"),
                     pl.col("team_id_1").alias("team_id"),
                     pl.col("team_name_1").alias("team_name"),
-                    pl.lit(0).alias("games"),
-                    pl.lit(0).alias("wins"),
-                    pl.lit(0).alias("draws"),
-                    pl.lit(0).alias("losses"),
-                    pl.lit(0).alias("goals_scored"),
-                    pl.lit(0).alias("goals_conceded"),
-                    pl.lit(0).alias("goals_diff"),
-                    pl.lit(0).alias("points"),
+                    pl.lit(0, dtype=pl.Int32).alias("games"),
+                    pl.lit(0, dtype=pl.Int32).alias("wins"),
+                    pl.lit(0, dtype=pl.Int32).alias("draws"),
+                    pl.lit(0, dtype=pl.Int32).alias("losses"),
+                    pl.lit(0, dtype=pl.Int64).alias("goals_scored"),
+                    pl.lit(0, dtype=pl.Int64).alias("goals_conceded"),
+                    pl.lit(0, dtype=pl.Int64).alias("goals_diff"),
+                    pl.lit(0, dtype=pl.Int32).alias("points"),
                 )  # fmt: skip
             )
     else:
@@ -188,20 +188,22 @@ def _create_team_based_views(
                     pl.col("match_day"),
                     pl.col("team_id_2").alias("team_id"),
                     pl.col("team_name_2").alias("team_name"),
-                    pl.lit(0).alias("games"),
-                    pl.lit(0).alias("wins"),
-                    pl.lit(0).alias("draws"),
-                    pl.lit(0).alias("losses"),
-                    pl.lit(0).alias("goals_scored"),
-                    pl.lit(0).alias("goals_conceded"),
-                    pl.lit(0).alias("goals_diff"),
-                    pl.lit(0).alias("points"),
-                )  # fmt: skip
+                    pl.lit(0, dtype=pl.Int32).alias("games"),
+                    pl.lit(0, dtype=pl.Int32).alias("wins"),
+                    pl.lit(0, dtype=pl.Int32).alias("draws"),
+                    pl.lit(0, dtype=pl.Int32).alias("losses"),
+                    pl.lit(0, dtype=pl.Int64).alias("goals_scored"),
+                    pl.lit(0, dtype=pl.Int64).alias("goals_conceded"),
+                    pl.lit(0, dtype=pl.Int64).alias("goals_diff"),
+                    pl.lit(0, dtype=pl.Int32).alias("points"),
+                )  # fmt: skipaway
             )
 
 
-def create_overall_standings_openligadb(
-    match_results_data_path: str, standings_data_path: str
+def create_standings_openligadb(
+    match_results_data_path: str,
+    standings_data_path: str,
+    standings_class: str = "overall",
 ) -> None:
     """Create a history of all standings based on the openligadb match results.
     - Only consider final results
@@ -214,6 +216,10 @@ def create_overall_standings_openligadb(
         Path to the clean match results parquet files.
     standings_data_path : str
         Path to the result file.
+    standings_class : str
+        "overall" - the KPIs will be generated for both teams.
+        "home" - the KPIs will only be generated for the home team.
+        "away" - the KPIs will only be generated for the away team.
     """
 
     match_results = pl.scan_parquet(match_results_data_path)
@@ -230,10 +236,10 @@ def create_overall_standings_openligadb(
 
     # Create team based views
     match_results_team1 = _create_team_based_views(
-        match_results_filtered, team=1, standings_class="overall"
+        match_results_filtered, team=1, standings_class=standings_class
     )
     match_results_team2 = _create_team_based_views(
-        match_results_filtered, team=2, standings_class="overall"
+        match_results_filtered, team=2, standings_class=standings_class
     )
 
     # Create standings
