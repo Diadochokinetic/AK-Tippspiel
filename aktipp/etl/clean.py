@@ -34,6 +34,7 @@ DEFAULT_FEATURES = [
     "league_name",
     "season_name",
     "match_day",
+    "match_day_name",
     "team_id_1",
     "team_id_2",
     "team_name_1",
@@ -42,6 +43,7 @@ DEFAULT_FEATURES = [
     "goals_team_2",
     "goals_diff",
     "result_class",
+    "result_name",
     "points_team_1",
     "points_team_2",
 ]
@@ -79,19 +81,19 @@ def clean_openligadb(
     records_data.with_columns(feature_store._league_name_raw()) \
     .join(other=league_mapper, on="league_name_raw", how="left") \
     .join(
-        other=team_mapper.select(["team_name", "team_id_unique"]).rename(
+        other=team_mapper.select(["team_id_raw", "team_id_unique"]).rename(
             {"team_id_unique": "team_id_unique_1"}
         ),
-        left_on="team1.teamName",
-        right_on="team_name",
+        left_on="team1.teamId",
+        right_on="team_id_raw",
         how="left",
     ) \
     .join(
-        other=team_mapper.select(["team_name", "team_id_unique"]).rename(
+        other=team_mapper.select(["team_id_raw", "team_id_unique"]).rename(
             {"team_id_unique": "team_id_unique_2"}
         ),
-        left_on="team2.teamName",
-        right_on="team_name",
+        left_on="team2.teamId",
+        right_on="team_id_raw",
         how="left",
     ) \
     .select(*_build_features(features)) \
