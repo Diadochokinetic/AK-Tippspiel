@@ -89,7 +89,7 @@ def create_standings_openligadb(
         Path to the clean match results parquet files.
     standings_data_path : str
         Path to the result file.
-    standings_class : str
+    standings_class : str, default='overall'
         "overall" - the KPIs will be generated for both teams.
         "home" - the KPIs will only be generated for the home team.
         "away" - the KPIs will only be generated for the away team.
