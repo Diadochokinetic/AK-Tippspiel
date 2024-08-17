@@ -196,7 +196,7 @@ def _create_team_based_views(
                     pl.lit(0, dtype=pl.Int64).alias("goals_conceded"),
                     pl.lit(0, dtype=pl.Int64).alias("goals_diff"),
                     pl.lit(0, dtype=pl.Int32).alias("points"),
-                )  # fmt: skipaway
+                )  # fmt: skip
             )
 
 
