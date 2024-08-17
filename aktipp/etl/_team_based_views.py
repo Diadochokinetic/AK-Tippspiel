@@ -36,6 +36,7 @@ def _create_team_based_views(
         if standings_class in ["home", "overall"]:
             return (
                 match_results.select(
+                    pl.col("match_id"),
                     pl.col("league_id"),
                     pl.col("league_name"),
                     pl.col("season_name"),
@@ -65,6 +66,7 @@ def _create_team_based_views(
         else:
             return (
                 match_results.select(
+                    pl.col("match_id"),
                     pl.col("league_id"),
                     pl.col("league_name"),
                     pl.col("season_name"),
@@ -86,6 +88,7 @@ def _create_team_based_views(
         if standings_class in ["away", "overall"]:
             return (
                 match_results.select(
+                    pl.col("match_id"),
                     pl.col("league_id"),
                     pl.col("league_name"),
                     pl.col("season_name"),
@@ -115,6 +118,7 @@ def _create_team_based_views(
         else:
             return (
                 match_results.select(
+                    pl.col("match_id"),
                     pl.col("league_id"),
                     pl.col("league_name"),
                     pl.col("season_name"),
