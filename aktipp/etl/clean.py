@@ -69,7 +69,10 @@ def clean_openligadb(
     """
 
     # Lazy load data
-    records_data = pl.scan_parquet(data_path + f"*{records}.parquet")
+    # leagues 50 & 4570 are incomplete and should be disregarded
+    records_data = pl.scan_parquet(data_path + f"*{records}.parquet").filter(
+        ~pl.col("leagueId").is_in([50, 4570])
+    )
 
     # Lazy load mappers
     league_mapper_path = resources.files(mapper) / "league_mapper.csv"
