@@ -49,25 +49,46 @@ def _performance_openligadb(
             pl.col("home_team"),
             pl.col("wins").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("wins_last_3_games"),
             pl.col("wins").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("wins_last_5_games"),
-            pl.col("wins").mean().over(["league_id", "team_id"], order_by="match_day").alias("wins_avg"),
+            (
+                pl.col("wins").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+            ).alias("wins_avg"),
             pl.col("draws").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("draws_last_3_games"),
             pl.col("draws").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("draws_last_5_games"),
-            pl.col("draws").mean().over(["league_id", "team_id"], order_by="match_day").alias("draws_avg"),
+            (
+                pl.col("draws").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+            ).alias("draws_avg"),
             pl.col("losses").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("losses_last_3_games"),
             pl.col("losses").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("losses_last_5_games"),
-            pl.col("losses").mean().over(["league_id", "team_id"], order_by="match_day").alias("losses_avg"),
+            (
+                pl.col("loesses").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+            ).alias("loesses_avg"),
             pl.col("points").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("points_last_3_games"),
             pl.col("points").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("points_avg"),
-            pl.col("points").mean.over(["league_id", "team_id"], order_by="match_day").alias("points_last_5_games"),
+            (
+                pl.col("points").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+            ).alias("points_avg"),
             pl.col("goals_scored").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("goals_scored_last_3_games"),
             pl.col("goals_scored").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("goals_scored_last_5_games"),
-            pl.col("goals_scored").mean().over(["league_id", "team_id"], order_by="match_day").alias("goals_scored_avg"),
+            (
+                pl.col("goals_scored").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+            ).alias("goals_scored_avg"),
             pl.col("goals_conceded").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("goals_conceded_last_3_games"),
             pl.col("goals_conceded").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("goals_conceded_last_5_games"),
-            pl.col("goals_conceded").mean().over(["league_id", "team_id"], order_by="match_day").alias("goals_conceded_avg"),
+            (
+                pl.col("goals_conceded").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+            ).alias("goals_conceded_avg"),
             pl.col("goals_diff").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("goals_diff_last_3_games"),
             pl.col("goals_diff").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("goals_diff_last_5_games"),
-            pl.col("goals_diff").mean().over(["league_id", "team_id"], order_by="match_day").alias("goals_diff_avg"),
+            (
+                pl.col("goals_diff").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+            ).alias("goals_diff_avg"),
         )
     )  # fmt: skip
 
