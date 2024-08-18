@@ -62,11 +62,11 @@ def _performance_openligadb(
             pl.col("losses").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("losses_last_3_games"),
             pl.col("losses").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("losses_last_5_games"),
             (
-                pl.col("loesses").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
+                pl.col("losses").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
                 /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
-            ).alias("loesses_avg"),
+            ).alias("losses_avg"),
             pl.col("points").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("points_last_3_games"),
-            pl.col("points").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("points_avg"),
+            pl.col("points").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("points_last_5_games"),
             (
                 pl.col("points").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
                 /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
