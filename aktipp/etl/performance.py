@@ -73,7 +73,6 @@ def create_performance_openligadb(
     Parameters
     ----------
     match_results_data_path : str
-        match_results_data_path : str
         Path to the clean match results parquet files.
     performance_data_path : str
         Path to the result file.
