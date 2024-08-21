@@ -1,3 +1,3 @@
-from . import etl, normalize, scraping
+from . import etl, eval, normalize, scraping
 
-__all__ = ["etl", "normalize", "scraping"]
+__all__ = ["etl", "eval", "normalize", "scraping"]
