@@ -21,37 +21,27 @@ def ak_score(y_true: ArrayLike, y_pred: ArrayLike) -> np.ndarray:
     ak_score: np.ndarray
         Calculated score for every game.
     """
-    y_true = np.array(y_true, dtype=np.int64)
-    y_pred = np.array(y_pred, dtype=np.int64)
+    y_true = np.array(y_true, dtype=np.float64)
+    y_pred = np.array(y_pred, dtype=np.float64)
 
     ak_score = np.where(
-        (y_true[..., 0] == y_pred[..., 0])
-        & (y_true[..., 1] == y_pred[..., 1]),  # exact result
+        (y_true[..., 0] == y_pred[..., 0]) & (y_true[..., 1] == y_pred[..., 1]),
+        3,  # exact result
         np.where(
-            y_true[..., 0] != y_true[..., 1],
-            7,  # exact result decisive game
-            5,  # exact result drawn game
-        ),
-        np.where(
-            (y_true[..., 0] - y_true[..., 1] == y_pred[..., 0] - y_pred[..., 1])
-            & (y_true[..., 0] != y_true[..., 1]),
-            4,  # goal diff decisive game
-            np.where(
-                (
-                    (y_true[..., 0] - y_true[..., 1] > 0)
-                    & (y_pred[..., 0] - y_pred[..., 1] > 0)
-                )  # win team 1
-                | (
-                    (y_true[..., 0] - y_true[..., 1] == 0)
-                    & (y_pred[..., 0] - y_pred[..., 1] == 0)
-                )  # draw
-                | (
-                    (y_true[..., 0] - y_true[..., 1] < 0)
-                    & (y_pred[..., 0] - y_pred[..., 1] < 0)
-                ),  # win team 2
-                2,
-                0,
-            ),
+            (
+                (y_true[..., 0] - y_true[..., 1] > 0)
+                & (y_pred[..., 0] - y_pred[..., 1] > 0)
+            )  # win team 1
+            | (
+                (y_true[..., 0] - y_true[..., 1] == 0)
+                & (y_pred[..., 0] - y_pred[..., 1] == 0)
+            )  # draw
+            | (
+                (y_true[..., 0] - y_true[..., 1] < 0)
+                & (y_pred[..., 0] - y_pred[..., 1] < 0)
+            ),  # win team 2
+            2,
+            0,
         ),
     )
 

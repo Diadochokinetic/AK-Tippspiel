@@ -30,12 +30,12 @@ def test_ak_score():
     ]
 
     ak_score_true = [
-        7,  # exact result team 1 win
-        5,  # exact result draw
-        7,  # exact result team 2 win
-        4,  # correct goal diff team 1 win
+        3,  # exact result team 1 win
+        3,  # exact result draw
+        3,  # exact result team 2 win
+        2,  # correct goal diff team 1 win
         2,  # correct goal diff draw (equals correct tendency)
-        4,  # correct goal diff team 2 win
+        2,  # correct goal diff team 2 win
         2,  # correct tendency team 1 win
         2,  # correct tendency team 2 win
         0,  # wrong team wins
