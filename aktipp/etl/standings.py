@@ -67,6 +67,7 @@ def _create_standings_openligadb(
             pl.struct(["points", "goals_diff", "goals_scored"])
             .rank(descending=True, method="min")
             .over(["league_id", "match_day"])
+            .cast(pl.Int64)
             .alias("rank")
         )
         .collect()  # fmt: skip
