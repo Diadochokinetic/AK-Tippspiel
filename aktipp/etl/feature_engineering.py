@@ -154,14 +154,18 @@ class FeatureBuilderOpenligadb:
             *_suffix_alias(standings_select_columns, suffix="_2"),
         )
 
-        return base.join(
-            other=standings_team_1,
-            on=["league_id", "team_id_1", "match_day"],
-            how="left",
-        ).join(
-            other=standings_team_2,
-            on=["league_id", "team_id_2", "match_day"],
-            how="left",
+        return (
+            base.join(
+                other=standings_team_1,
+                on=["league_id", "team_id_1", "match_day"],
+                how="left",
+            )
+            .join(
+                other=standings_team_2,
+                on=["league_id", "team_id_2", "match_day"],
+                how="left",
+            )
+            .with_columns((pl.col("rank_1") - pl.col("rank_2")).alias("rank_diff"))
         )
 
     def _add_overall_performance(
