@@ -18,8 +18,7 @@ def _performance_openligadb(
         Match results for the away team
     performance_class : str default='overall'
         "overall" - all games
-        "home" - home games
-        "away" - away games
+        "home_away" - home_away games seperated
 
     Returns
     -------
@@ -27,19 +26,16 @@ def _performance_openligadb(
         LazyFrame with the calculated performance statistics.
     """
 
-    # set filter based on performance_class
-    if performance_class == "home":
-        performance_class_filter = pl.col("home_team") == 1
-    elif performance_class == "away":
-        performance_class_filter = pl.col("home_team") == 0
+    # set grouping based on performance_class
+    if performance_class == "home_away":
+        group_vars = ["league_id", "team_id", "home_team"]
     elif performance_class == "overall":
-        performance_class_filter = pl.lit(True)
+        group_vars = ["league_id", "team_id"]
     else:
-        raise ValueError("performance_class must be in ['home', 'away', 'overall']")
+        raise ValueError("performance_class must be in ['home_away', 'overall']")
 
     return (
         pl.concat([match_results_team1, match_results_team2], how="vertical")
-        .filter(performance_class_filter)
         .select(
             pl.col("match_id"),
             pl.col("league_id"),
@@ -47,47 +43,47 @@ def _performance_openligadb(
             pl.col("team_id"),
             pl.col("team_name"),
             pl.col("home_team"),
-            pl.col("wins").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("wins_last_3_games"),
-            pl.col("wins").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("wins_last_5_games"),
+            pl.col("wins").rolling_sum(3).over(group_vars, order_by="match_day").alias("wins_last_3_games"),
+            pl.col("wins").rolling_sum(5).over(group_vars, order_by="match_day").alias("wins_last_5_games"),
             (
-                pl.col("wins").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
-                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+                pl.col("wins").cum_sum().over(group_vars, order_by="match_day") \
+                /pl.col("games").cum_sum().over(group_vars, order_by="match_day")
             ).alias("wins_avg"),
-            pl.col("draws").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("draws_last_3_games"),
-            pl.col("draws").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("draws_last_5_games"),
+            pl.col("draws").rolling_sum(3).over(group_vars, order_by="match_day").alias("draws_last_3_games"),
+            pl.col("draws").rolling_sum(5).over(group_vars, order_by="match_day").alias("draws_last_5_games"),
             (
-                pl.col("draws").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
-                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+                pl.col("draws").cum_sum().over(group_vars, order_by="match_day") \
+                /pl.col("games").cum_sum().over(group_vars, order_by="match_day")
             ).alias("draws_avg"),
-            pl.col("losses").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("losses_last_3_games"),
-            pl.col("losses").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("losses_last_5_games"),
+            pl.col("losses").rolling_sum(3).over(group_vars, order_by="match_day").alias("losses_last_3_games"),
+            pl.col("losses").rolling_sum(5).over(group_vars, order_by="match_day").alias("losses_last_5_games"),
             (
-                pl.col("losses").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
-                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+                pl.col("losses").cum_sum().over(group_vars, order_by="match_day") \
+                /pl.col("games").cum_sum().over(group_vars, order_by="match_day")
             ).alias("losses_avg"),
-            pl.col("points").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("points_last_3_games"),
-            pl.col("points").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("points_last_5_games"),
+            pl.col("points").rolling_sum(3).over(group_vars, order_by="match_day").alias("points_last_3_games"),
+            pl.col("points").rolling_sum(5).over(group_vars, order_by="match_day").alias("points_last_5_games"),
             (
-                pl.col("points").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
-                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+                pl.col("points").cum_sum().over(group_vars, order_by="match_day") \
+                /pl.col("games").cum_sum().over(group_vars, order_by="match_day")
             ).alias("points_avg"),
-            pl.col("goals_scored").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("goals_scored_last_3_games"),
-            pl.col("goals_scored").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("goals_scored_last_5_games"),
+            pl.col("goals_scored").rolling_sum(3).over(group_vars, order_by="match_day").alias("goals_scored_last_3_games"),
+            pl.col("goals_scored").rolling_sum(5).over(group_vars, order_by="match_day").alias("goals_scored_last_5_games"),
             (
-                pl.col("goals_scored").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
-                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+                pl.col("goals_scored").cum_sum().over(group_vars, order_by="match_day") \
+                /pl.col("games").cum_sum().over(group_vars, order_by="match_day")
             ).alias("goals_scored_avg"),
-            pl.col("goals_conceded").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("goals_conceded_last_3_games"),
-            pl.col("goals_conceded").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("goals_conceded_last_5_games"),
+            pl.col("goals_conceded").rolling_sum(3).over(group_vars, order_by="match_day").alias("goals_conceded_last_3_games"),
+            pl.col("goals_conceded").rolling_sum(5).over(group_vars, order_by="match_day").alias("goals_conceded_last_5_games"),
             (
-                pl.col("goals_conceded").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
-                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+                pl.col("goals_conceded").cum_sum().over(group_vars, order_by="match_day") \
+                /pl.col("games").cum_sum().over(group_vars, order_by="match_day")
             ).alias("goals_conceded_avg"),
-            pl.col("goals_diff").rolling_sum(3).over(["league_id", "team_id"], order_by="match_day").alias("goals_diff_last_3_games"),
-            pl.col("goals_diff").rolling_sum(5).over(["league_id", "team_id"], order_by="match_day").alias("goals_diff_last_5_games"),
+            pl.col("goals_diff").rolling_sum(3).over(group_vars, order_by="match_day").alias("goals_diff_last_3_games"),
+            pl.col("goals_diff").rolling_sum(5).over(group_vars, order_by="match_day").alias("goals_diff_last_5_games"),
             (
-                pl.col("goals_diff").cum_sum().over(["league_id", "team_id"], order_by="match_day") \
-                /pl.col("games").cum_sum().over(["league_id", "team_id"], order_by="match_day")
+                pl.col("goals_diff").cum_sum().over(group_vars, order_by="match_day") \
+                /pl.col("games").cum_sum().over(group_vars, order_by="match_day")
             ).alias("goals_diff_avg"),
         )
     )  # fmt: skip
@@ -108,8 +104,7 @@ def create_performance_openligadb(
         Path to the result file.
     performance_class : str default='overall'
         "overall" - all games
-        "home" - home games
-        "away" - away games
+        "home_away" - home_away games seperated
     """
 
     match_results = pl.scan_parquet(match_results_data_path)
