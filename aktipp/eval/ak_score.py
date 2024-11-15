@@ -3,9 +3,8 @@ from numpy.typing import ArrayLike
 
 
 def ak_score(y_true: ArrayLike, y_pred: ArrayLike) -> np.ndarray:
-    """Calculate the score based on 2 points for the correct tendency, another two
-    points for the corret goal difference (only for decisive games) and finally
-    another three points for the correct result.
+    """Calculate the score based on 2 points for the correct tendency and 3 points for
+    the correct result.
 
     Parameters
     ----------
