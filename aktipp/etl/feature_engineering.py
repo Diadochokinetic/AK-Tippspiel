@@ -6,7 +6,9 @@ from ._helper import _suffix_alias
 class FeatureBuilderOpenligadb:
     def __init__(self): ...
 
-    def _load_match_results(self, match_results_data_path: str) -> pl.LazyFrame:
+    def _load_match_results(
+        self, match_results_data_path: str, mode: str = "train"
+    ) -> pl.LazyFrame:
         """Load match results.
 
         Parameters
@@ -22,17 +24,18 @@ class FeatureBuilderOpenligadb:
 
         match_results = pl.scan_parquet(match_results_data_path)
 
-        # Filter match results
-        # - Only consider final results
-        # - Disregard relegation games
-        # - Disregard games without a final result
-        match_results_filtered = match_results.filter(
-            (pl.col("result_name")=="Endergebnis")
-            & (~pl.col("match_day_name").str.to_lowercase().str.contains("relegation"))
-            & (pl.col("result_class").is_not_nan())
-        )  # fmt: skip
-
-        return match_results_filtered
+        if mode == "train":
+            # Filter match results
+            # - Only consider final results
+            # - Disregard relegation games
+            # - Disregard games without a final result
+            return match_results.filter(
+                (pl.col("result_name")=="Endergebnis")
+                & (~pl.col("match_day_name").str.to_lowercase().str.contains("relegation"))
+                & (pl.col("result_class").is_not_nan())
+            )  # fmt: skip
+        elif mode == "predict":
+            return match_results
 
     def _result_class_base_view(self, match_results: pl.LazyFrame) -> pl.LazyFrame:
         n_samples = int(match_results.select(pl.len()).collect().item() / 2)
@@ -241,14 +244,15 @@ class FeatureBuilderOpenligadb:
         match_results_data_path: str,
         features: dict[str:str],
         target: str = "goals",
+        mode: str = "train",
     ) -> None:
         if target == "goals":
             base = self._goals_scored_base_view(
-                self._load_match_results(match_results_data_path)
+                self._load_match_results(match_results_data_path, mode)
             )
         elif target == "result_class":
             base = self._result_class_base_view(
-                self._load_match_results(match_results_data_path)
+                self._load_match_results(match_results_data_path, mode)
             )
         else:
             raise NotImplementedError()
