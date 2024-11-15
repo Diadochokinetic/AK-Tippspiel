@@ -239,7 +239,6 @@ class FeatureBuilderOpenligadb:
     def get_features(
         self,
         match_results_data_path: str,
-        features_result_data_path: str,
         features: dict[str:str],
         target: str = "goals",
     ) -> None:
