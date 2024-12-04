@@ -37,11 +37,18 @@ class FeatureBuilderOpenligadb:
         elif mode == "predict":
             return match_results
 
-    def _result_class_base_view(self, match_results: pl.LazyFrame) -> pl.LazyFrame:
+    def _result_class_base_view(
+        self,
+        match_results: pl.LazyFrame,
+        mode: str = "train",
+    ) -> pl.LazyFrame:
         n_samples = int(match_results.select(pl.len()).collect().item() / 2)
-        reverse_sample_ids = (
-            match_results.select(pl.col("match_id")).collect().sample(n_samples)
-        )
+        if mode == "train":
+            reverse_sample_ids = (
+                match_results.select(pl.col("match_id")).collect().sample(n_samples)
+            )
+        else:
+            reverse_sample_ids = ()
 
         normal_samples = match_results.filter(
             ~pl.col("match_id").is_in(reverse_sample_ids)
@@ -252,7 +259,8 @@ class FeatureBuilderOpenligadb:
             )
         elif target == "result_class":
             base = self._result_class_base_view(
-                self._load_match_results(match_results_data_path, mode)
+                self._load_match_results(match_results_data_path, mode),
+                mode=mode,
             )
         else:
             raise NotImplementedError()
