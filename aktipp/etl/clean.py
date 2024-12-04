@@ -50,7 +50,9 @@ DEFAULT_FEATURES = [
 
 
 def clean_openligadb(
-    data_path: str, records: str, features: list[str] = DEFAULT_FEATURES
+    data_path: str,
+    records: str = "matchResults",
+    features: list[str] = DEFAULT_FEATURES,
 ) -> None:
     """Clean up all openligadb files for one type of record data into a single parquet
     file. Clean up consists of:

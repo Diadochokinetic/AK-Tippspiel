@@ -6,7 +6,9 @@ from ._helper import _suffix_alias
 class FeatureBuilderOpenligadb:
     def __init__(self): ...
 
-    def _load_match_results(self, match_results_data_path: str) -> pl.LazyFrame:
+    def _load_match_results(
+        self, match_results_data_path: str, mode: str = "train"
+    ) -> pl.LazyFrame:
         """Load match results.
 
         Parameters
@@ -22,23 +24,31 @@ class FeatureBuilderOpenligadb:
 
         match_results = pl.scan_parquet(match_results_data_path)
 
-        # Filter match results
-        # - Only consider final results
-        # - Disregard relegation games
-        # - Disregard games without a final result
-        match_results_filtered = match_results.filter(
-            (pl.col("result_name")=="Endergebnis")
-            & (~pl.col("match_day_name").str.to_lowercase().str.contains("relegation"))
-            & (pl.col("result_class").is_not_nan())
-        )  # fmt: skip
+        if mode == "train":
+            # Filter match results
+            # - Only consider final results
+            # - Disregard relegation games
+            # - Disregard games without a final result
+            return match_results.filter(
+                (pl.col("result_name")=="Endergebnis")
+                & (~pl.col("match_day_name").str.to_lowercase().str.contains("relegation"))
+                & (pl.col("result_class").is_not_nan())
+            )  # fmt: skip
+        elif mode == "predict":
+            return match_results
 
-        return match_results_filtered
-
-    def _result_class_base_view(self, match_results: pl.LazyFrame) -> pl.LazyFrame:
+    def _result_class_base_view(
+        self,
+        match_results: pl.LazyFrame,
+        mode: str = "train",
+    ) -> pl.LazyFrame:
         n_samples = int(match_results.select(pl.len()).collect().item() / 2)
-        reverse_sample_ids = (
-            match_results.select(pl.col("match_id")).collect().sample(n_samples)
-        )
+        if mode == "train":
+            reverse_sample_ids = (
+                match_results.select(pl.col("match_id")).collect().sample(n_samples)
+            )
+        else:
+            reverse_sample_ids = ()
 
         normal_samples = match_results.filter(
             ~pl.col("match_id").is_in(reverse_sample_ids)
@@ -239,17 +249,18 @@ class FeatureBuilderOpenligadb:
     def get_features(
         self,
         match_results_data_path: str,
-        features_result_data_path: str,
         features: dict[str:str],
         target: str = "goals",
+        mode: str = "train",
     ) -> None:
         if target == "goals":
             base = self._goals_scored_base_view(
-                self._load_match_results(match_results_data_path)
+                self._load_match_results(match_results_data_path, mode)
             )
         elif target == "result_class":
             base = self._result_class_base_view(
-                self._load_match_results(match_results_data_path)
+                self._load_match_results(match_results_data_path, mode),
+                mode=mode,
             )
         else:
             raise NotImplementedError()
