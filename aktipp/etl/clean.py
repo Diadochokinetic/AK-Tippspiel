@@ -1,8 +1,34 @@
 from importlib import resources
+import os
 import polars as pl
 
 from . import feature_store
 from . import mapper
+
+
+def _check_season_openligadb_exists(
+    league: str, season: str, data_path: str, records: str
+) -> bool:
+    """Check if a league season combination as available as json.
+
+    Parameters
+    ----------
+    league : str
+        String identifier from the league, e.g. 'bl1' for 1. Bundesliga. A complete
+        list can be retrieved from https://api.openligadb.de/getavailableleagues.
+    season : int
+        Year indicating the start of a season, e.g. 2023 for the 2023/2024 season.
+    data_path : str
+        Path where the data should be available as json.
+
+    Returns
+    -------
+    result : bool
+        True if league season combination is available.
+    """
+    return os.path.isfile(
+        f"{data_path}/normalized_data/{league}_{season}_{records}.parquet"
+    )
 
 
 def _build_features(features: list[str]) -> list[pl.Expr]:
@@ -49,12 +75,14 @@ DEFAULT_FEATURES = [
 ]
 
 
-def clean_openligadb(
+def clean_season_openligadb(
+    league: str,
+    season: str,
     data_path: str,
     records: str = "matchResults",
     features: list[str] = DEFAULT_FEATURES,
 ) -> None:
-    """Clean up all openligadb files for one type of record data into a single parquet
+    """Clean up openligadb season files for one type of record data as parquet
     file. Clean up consists of:
     - Resolving ambigious entities (teams and leagues)
     - Renaming to fit a lowercase naming scheme
@@ -62,6 +90,11 @@ def clean_openligadb(
 
     Parameters
     ----------
+    league : str
+        String identifier from the league, e.g. 'bl1' for 1. Bundesliga. A complete
+        list can be retrieved from https://api.openligadb.de/getavailableleagues.
+    season : int
+        Year indicating the start of a season, e.g. 2023 for the 2023/2024 season.
     data_path : str
         Path where the data should be read from json and dumped as normalized parquet.
     records : str, default="matchResults"
@@ -71,9 +104,8 @@ def clean_openligadb(
     """
 
     # Lazy load data
-    # leagues 50 & 4570 are incomplete and should be disregarded
-    records_data = pl.scan_parquet(data_path + f"*{records}.parquet").filter(
-        ~pl.col("leagueId").is_in([50, 4570])
+    records_data = pl.scan_parquet(
+        f"{data_path}/normalized_data/{league}_{season}_{records}.parquet"
     )
 
     # Lazy load mappers
@@ -102,4 +134,41 @@ def clean_openligadb(
         how="left",
     ) \
     .select(*_build_features(features)) \
-    .sink_parquet(data_path + f"{records}_clean.parquet")  # fmt: skip
+    .sink_parquet(f"{data_path}/cleaned_data/{league}_{season}_{records}_clean.parquet")  # fmt: skip
+
+
+def clean_many_seasons_openligadb(
+    leagues: list[str],
+    seasons: list[int],
+    data_path: str,
+    records: str = "matchResults",
+) -> None:
+    """Clean many seasons for one type of record data as parquet
+    file. Clean up consists of:
+    - Resolving ambigious entities (teams and leagues)
+    - Renaming to fit a lowercase naming scheme
+    - Renaming to resolve ambigious termionology (points and goals)
+
+    Parameters
+    ----------
+    leagues: list[str]
+        List of string identifiers, e.g. ['bl1', 'bl2']. A complete list of possible
+        values can be retrieved from https://api.openligadb.de/getavailableleagues.
+    seasons: list[int]
+        List of years for multiple seasons.
+    data_path : str
+        Path where the data should be read from json and dumped as normalized parquet.
+    records : str, default="matchResults"
+        List of the records to be normalized.
+    meta : str | list[str], default="all"
+        Meta data to be used in normalization. "all" indicates all available meta data.
+        Otherwise a list, e.g. ["matchID"] with desired meta data can be passed.
+    """
+
+    for league in leagues:
+        for season in seasons:
+            if _check_season_openligadb_exists(league, season, data_path, records):
+                clean_season_openligadb(league, season, data_path, records)
+                print(f"{league} {season} has been normalized.")
+            else:
+                print(f"{league} {season} is not available and will be skipped.")

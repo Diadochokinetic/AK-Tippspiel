@@ -21,7 +21,7 @@ def _check_season_openligadb_exists(league: str, season: str, data_path: str) ->
     result : bool
         True if league season combination is available.
     """
-    return os.path.isfile(data_path + f"{league}_{season}.json")
+    return os.path.isfile(f"{data_path}/scraped_data/{league}_{season}.json")
 
 
 def normalize_season_openligadb(
@@ -101,7 +101,7 @@ def normalize_season_openligadb(
         raise ValueError("meta should be 'all' or subset of {valid_meta}")
 
     # read json data
-    with open(data_path + f"{league}_{season}.json", "r") as file:
+    with open(f"{data_path}/scraped_data/{league}_{season}.json", "r") as file:
         data = json.load(file)
 
     # normalize data and dump as parquet file
@@ -169,7 +169,7 @@ def normalize_season_openligadb(
         .cast({records: pl.Struct(schema_records[records])}) \
         .unnest(records) \
         .select(meta + record_keys) \
-        .write_parquet(data_path + f"{league}_{season}_{records}.parquet")  # fmt: skip
+        .write_parquet(f"{data_path}/normalized_data/{league}_{season}_{records}.parquet")  # fmt: skip
 
 
 def normalize_many_seasons_openligadb(

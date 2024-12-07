@@ -57,7 +57,7 @@ def scrape_season_openligadb(league: str, season: int, data_path: str) -> None:
     data = json.loads(contents)
 
     # dump data as json
-    with open(f"{data_path}{league}_{season}.json", "w") as file:
+    with open(f"{data_path}/scraped_data/{league}_{season}.json", "w") as file:
         json.dump(data, file)
 
 
